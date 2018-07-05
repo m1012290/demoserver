@@ -19,7 +19,8 @@ import com.hitachi.frm.api.service.UserService;
 public class LoginController {
 
     private final UserService userService;
-
+    private final String errorresponsefor400   = "{\"status\":\"FAILURE\",\"message\":\"Invalid inputs recieved\"}";
+    private final String errorresponsefor404 = "{\"status\":\"FAILURE\",\"message\":\"Email id or password is invalid\"}";
     @Autowired
     public LoginController(UserService userService) {
         this.userService = userService;
@@ -32,10 +33,11 @@ public class LoginController {
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(@RequestBody User user) {
         if (StringUtils.isEmpty(user.getEmail()) || StringUtils.isEmpty(user.getPassword())) {
-            return new ResponseEntity<>(new User(), HttpStatus.OK);
+        	
+            return new ResponseEntity<>(errorresponsefor400, HttpStatus.BAD_REQUEST);
         }
         if (userService.findUserByEmailAndPassword(user.getEmail(), user.getPassword()) == null){
-            return new ResponseEntity<>(new User(), HttpStatus.OK);
+            return new ResponseEntity<>(errorresponsefor404, HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(userService.findUserByEmail(user.getEmail()), HttpStatus.OK);
     }

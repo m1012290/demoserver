@@ -26,4 +26,10 @@ public class SuspiciousServiceImpl implements SuspiciousService {
         Iterator<SuspiciousTranDetail> susIterator = suspiciousRepository.findAll().iterator();
         return IteratorUtils.toList(susIterator);
     }
+
+	@Override
+	public SuspiciousTranDetail createSuspiciousTran(SuspiciousTranDetail suspiciousTranDetail) {
+		SuspiciousTranDetail suspiciousTran = suspiciousRepository.save(suspiciousTranDetail);
+		return suspiciousTran;
+	}
 }
