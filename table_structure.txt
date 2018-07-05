@@ -1,0 +1,213 @@
+------------------------------------------------------------------
+Transaction_detail:
+--------------------------------------
+DROP TABLE IF EXISTS transaction_detail;
+
+CREATE TABLE transaction_detail(
+tran_id 			VARCHAR(30) NOT NULL,
+tran_date 			TIMESTAMP 	NOT NULL,
+tran_amt 			NUMERIC(14,2) NOT NULL,
+acct_no 			VARCHAR(16),
+tran_type 			VARCHAR(20),
+tran_ind 			CHAR(1),
+tran_status 		CHAR(1),
+payee_acct 			VARCHAR(16),
+tran_remarks 		VARCHAR(60),
+inst_type 			VARCHAR(20),
+inst_number 		VARCHAR(20),
+inst_Date 			TIMESTAMP,
+sol_id 				VARCHAR(10),
+device_id 			VARCHAR(30),
+channel_id 			VARCHAR(10),
+enter_user_id 		VARCHAR(10),
+posted_user_id 		VARCHAR(10),
+zip_code 			VARCHAR(10),
+created_at 			TIMESTAMP,
+bank_id 				VARCHAR(10),
+CONSTRAINT transaction_detail_pk PRIMARY KEY (tran_id,tran_date)
+)
+WITH (
+  OIDS = FALSE
+);
+
+CREATE INDEX transaction_detail_channel_id_indx ON transaction_detail (channel_id);
+CREATE INDEX transaction_detail_acct_no_indx ON transaction_detail (acct_no);
+
+ALTER TABLE transaction_detail
+  OWNER TO onlinefrauddetection;
+-------------------------------------------------------------------
+Account detail
+-------------------------------------------------------------------
+DROP TABLE IF EXISTS account_detail;
+
+CREATE TABLE account_detail(
+acct_no 			VARCHAR(16),
+bank_id				VARCHAR(10),
+acct_type 			VARCHAR(20),
+acct_open_date 		TIMESTAMP,
+acct_cls_date 		TIMESTAMP,
+acct_cls_flag 		CHAR(1),
+acct_bal 			NUMERIC(14,2),
+acct_freez_flag 	CHAR(1),
+cust_id 			VARCHAR(20),
+cust_phone 			VARCHAR(16),
+cust_email 			VARCHAR(50),
+cust_zipcode 		VARCHAR(20),
+cust_risk_level 	VARCHAR(20),
+cust_rm_start_date 	TIMESTAMP,
+sol_id 				VARCHAR(10),
+created_at 			TIMESTAMP,
+updated_at 			TIMESTAMP,
+CONSTRAINT account_detail_pk PRIMARY KEY (acct_no,bank_id)
+)
+WITH (
+  OIDS = FALSE
+);
+
+CREATE INDEX account_detail_acct_open_date_indx ON account_detail (acct_open_date);
+CREATE INDEX account_detail_cust_id_indx ON account_detail (cust_id);
+
+ALTER TABLE account_detail
+  OWNER TO onlinefrauddetection;
+----------------------------------------------------------------------------------
+device_risk_detail
+----------------------
+DROP TABLE IF EXISTS device_risk_detail;
+
+CREATE TABLE device_risk_detail(
+device_id 			VARCHAR(30),
+device_type 		VARCHAR(30) ,
+device_desc 		VARCHAR(50),
+risk_check_flag 	CHAR(1),
+created_at 			TIMESTAMP,
+updated_at 			TIMESTAMP,
+bank_id 			VARCHAR(10),
+CONSTRAINT device_risk_detail_pk PRIMARY KEY (device_id,device_type)
+)
+WITH (
+  OIDS = FALSE
+);
+
+ALTER TABLE device_risk_detail
+  OWNER TO onlinefrauddetection;
+-----------------------------------------------
+rule_desc
+-----------------------------------------
+DROP TABLE IF EXISTS rule_desc;
+
+CREATE TABLE rule_desc(
+rule_id 			VARCHAR(6) PRIMARY KEY,
+rule_name 			VARCHAR(30) ,
+rule_priority 		INTEGER,
+status 				CHAR(1),
+created_at 			TIMESTAMP,
+updated_at 			TIMESTAMP
+)
+WITH (
+  OIDS = FALSE
+);
+
+ALTER TABLE rule_desc
+  OWNER TO onlinefrauddetection;
+-------------------------------------------------------------
+Suspicious_detail
+-----------------------------------------
+DROP TABLE IF EXISTS suspicious_tran_detail;
+
+CREATE TABLE suspicious_tran_detail(
+rule_id 			VARCHAR(100),
+tran_id 			VARCHAR(30) ,
+tran_date 			TIMESTAMP ,	
+susp_type 			VARCHAR(10),
+device_id 			VARCHAR(30),
+channel_id 			VARCHAR(10),
+created_at 			TIMESTAMP,
+updated_at 			TIMESTAMP,
+CONSTRAINT suspicious_tran_detail_pk PRIMARY KEY (rule_id,tran_id),
+FOREIGN KEY (tran_id,tran_date) REFERENCES transaction_detail (tran_id, tran_date)
+)
+WITH (
+  OIDS = FALSE
+);
+
+CREATE INDEX suspicious_tran_detail_tran_id_indx ON suspicious_tran_detail (tran_id,tran_date);
+CREATE INDEX suspicious_tran_detail_channel_id_indx ON suspicious_tran_detail (channel_id);
+CREATE INDEX suspicious_tran_detail_susp_type_indx ON suspicious_tran_detail (susp_type);
+
+ALTER TABLE suspicious_tran_detail
+  OWNER TO onlinefrauddetection;
+--------------------------------------------------------------------------------
+BENEFICIARY_detail
+-------------------------
+DROP TABLE IF EXISTS beneficiary_detail;
+
+CREATE TABLE beneficiary_detail(
+BENEFICIARY_ID 			VARCHAR(6),
+ACCT_NO		 			VARCHAR(16),
+CHANNEL_ID 				VARCHAR(10),
+IFSC_CODE 				VARCHAR(15) ,		
+BEN_BANK_ID			 	VARCHAR(10),
+BEN_CITY 				VARCHAR(20),
+BEN_COUNTRY			 	VARCHAR(20),
+BEN_ZIPCODE			 	VARCHAR(10),
+created_at 				TIMESTAMP,
+updated_at 				TIMESTAMP,
+CONSTRAINT beneficiary_detail_pk PRIMARY KEY (BENEFICIARY_ID,ACCT_NO),
+FOREIGN KEY (ACCT_NO) REFERENCES account_detail(ACCT_NO)
+)
+WITH (
+  OIDS = FALSE
+);
+
+CREATE INDEX beneficiary_detail_ACCT_NO_indx ON beneficiary_detail(BENEFICIARY_ID,ACCT_NO);
+
+-------------------------------------
+DROP TABLE IF EXISTS online_user_detail;
+
+create table online_user_detail
+(
+    USER_ID 			varchar(15) PRIMARY KEY,
+	USER_NAME 			varchar(32) ,
+	USER_password		varchar(50),
+	CHANNEL_ID 			VARCHAR(10),
+	LAST_LOGIN_DATE 	TIMESTAMP,
+	NO_ATTEMPT 			INTEGER,
+    created_at 			TIMESTAMP,
+    updated_at 			TIMESTAMP,
+    BANK_ID  			varchar(10)
+)
+WITH (
+  OIDS = FALSE
+);
+
+CREATE INDEX online_user_detail_CHANNEL_ID_indx ON online_user_detail(CHANNEL_ID,BANK_ID);
+
+-----------------------------------------------------------------------------------
+LIMIT DETAIL
+----------------------
+DROP TABLE IF EXISTS CUST_LIMIT_DETAIL;
+
+create table CUST_LIMIT_DETAIL
+(
+    CUST_ID 		varchar(15) PRIMARY KEY,
+	CUST_NAME 		varchar(32) ,
+	CHANNEL_ID 		VARCHAR(10),
+	TRAN_TYPE 		VARCHAR(10),
+	DAILY_LIMIT 	NUMERIC(14,2),
+	MONTHLY_LIMIT 	NUMERIC(14,2),
+	BANK_LIMIT 		NUMERIC(14,2),
+    created_at 		TIMESTAMP,
+    updated_at 		TIMESTAMP,
+    BANK_ID  		varchar(11)
+)
+WITH (
+  OIDS = FALSE
+);
+
+CREATE INDEX CUST_LIMIT_DETAIL_CHANNEL_TRANTYPE_ID_indx ON CUST_LIMIT_DETAIL(TRAN_TYPE,CHANNEL_ID);
+
+-------------------------------------------------------------------------------------------------
+
+com.hitachi.frm.postgresql.entity
+
++447520637936 
